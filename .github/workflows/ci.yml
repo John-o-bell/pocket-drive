@@ -1,0 +1,30 @@
+name: Football checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: pnpm/setup@v3
+        with:
+          runtime: node@22
+          install: false
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Football and multiplayer tests
+        run: pnpm test
+      - name: Production build
+        run: pnpm build
+      - name: Built Worker and D1 integration
+        run: pnpm test:runtime
