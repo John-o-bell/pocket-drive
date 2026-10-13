@@ -1,0 +1,13 @@
+{
+  "name": "@pocket-drive/game",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/engine.d.ts",
+      "import": "./src/engine.js"
+    },
+    "./types": "./src/types.ts"
+  }
+}

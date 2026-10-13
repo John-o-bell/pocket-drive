@@ -1,19 +1,7 @@
-# Working on Pocket Drive
+# Contributing
 
-Start from the `main` branch and create a branch for each change. Run the football tests before opening a pull request. Changes to the room API, engine state, or network adapter should also pass the built Worker integration check.
+Start with [development instructions](docs/development.md) and [architecture](docs/architecture.md). Use a branch and pull request for each focused change. CI must pass before merging.
 
-```sh
-pnpm test
-pnpm build
-pnpm test:runtime
-```
+Preserve the shared engine's fixed timestep and seeded randomness. Keep the server authoritative. Validate all client messages at the boundary, and keep reconnect secrets out of shared snapshots and logs.
 
-The GitHub Actions workflow runs these checks on pushes to `main` and pull requests. It verifies code but does not deploy it.
-
-Keep movement, actions, scores, and possession decisions authoritative in `server/rooms.js` and `public/game/engine.js`. The browser may predict movement but must not decide a shared match's outcome. Preserve the fixed timestep and seeded simulation so snapshots can be replayed.
-
-Generate database migrations with `pnpm db:generate`; commit the SQL and Drizzle metadata together. Do not rewrite migrations that have already been applied to a database.
-
-Never commit `.env` files, Cloudflare API tokens, production database contents, or local room session credentials. Local caches and generated builds are ignored.
-
-Before shipping a gameplay change, play both offense and defense. Before shipping network changes, test two separate tabs and two separate devices, including refreshing either player and briefly disconnecting. Automated tests do not verify cross-device latency or game feel.
+Run `npm run typecheck`, `npm test`, `npm run build` and `npm run test:integration`. Play-test both teams and refresh/reconnect when changing online behavior.

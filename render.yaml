@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: pocket-drive
+    runtime: node
+    plan: 0.5c-512mb
+    region: ohio
+    numInstances: 1
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
