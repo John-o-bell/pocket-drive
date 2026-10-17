@@ -19,6 +19,7 @@ import {
   updateCamera,
 } from "./camera.js";
 import { RoomSession, savedRoom } from "./network.js";
+import { playGuidance } from "./guidance.js";
 const $ = (id) => document.getElementById(id),
   canvas = $("field"),
   ctx = canvas.getContext("2d");
@@ -193,6 +194,7 @@ async function connectRoom(action, credentials = null) {
     }
     if (online()) session.stop();
     session = remote;
+    showGame();
     lastRoomStage = null;
     started = true;
     paused = false;
@@ -218,7 +220,7 @@ $("online-button").onclick =
     openLobby;
 $("close-lobby").onclick = () => {
   $("lobby-dialog").close();
-  canvas.focus({ preventScroll: true });
+  (gameVisible ? canvas : $("home-online")).focus({ preventScroll: true });
 };
 $("create-room").onclick = () => connectRoom("create");
 $("join-room").onclick = () => connectRoom("join");
@@ -305,7 +307,59 @@ $("pick-button").onclick = $("touch-pick").onclick = () => {
   send({ type: "pick" });
   canvas.focus({ preventScroll: true });
 };
+let gameVisible = false;
+async function requestFullscreen() {
+  try {
+    if (!document.fullscreenElement)
+      await document.documentElement?.requestFullscreen?.();
+  } catch {
+    // The window-filling game view works when browser fullscreen is unavailable.
+  }
+}
+function showGame() {
+  gameVisible = true;
+  $("game-body").classList.remove("home-view");
+  $("game-body").classList.add("game-view");
+}
+$("fullscreen").onclick = requestFullscreen;
+$("home-solo").onclick = () => {
+  requestFullscreen();
+  started = false;
+  newGame();
+};
+$("home-online").onclick = () => {
+  openLobby();
+};
+$("home-resume").onclick = () => {
+  requestFullscreen();
+  showGame();
+  setPause(false);
+  canvas.focus({ preventScroll: true });
+};
+$("back-home").onclick = async () => {
+  if (online()) {
+    if (!confirm("Leave this online match and return home?")) return;
+    await session.leave();
+    session = new LocalSession(Date.now() >>> 0, $("difficulty").value);
+    lastRoomStage = null;
+    started = false;
+    syncRoom();
+  }
+  releaseInput();
+  setPause(true);
+  gameVisible = false;
+  $("game-body").classList.remove("game-view");
+  $("game-body").classList.add("home-view");
+  $("home-resume").classList.toggle("hidden", !started);
+  try {
+    await document.exitFullscreen?.();
+  } catch {}
+  $("home-solo").focus();
+};
 function start() {
+  showGame();
+  paused = false;
+  $("pause-overlay").classList.add("hidden");
   started = true;
   $("splash").classList.add("hidden");
   $("pause").classList.remove("hidden");
@@ -465,6 +519,7 @@ function special() {
 }
 window.addEventListener("keydown", (e) => {
   if (
+    !gameVisible ||
     $("help-dialog").open ||
     $("lobby-dialog").open ||
     ["SELECT", "INPUT", "TEXTAREA"].includes(e.target.tagName)
@@ -932,6 +987,15 @@ function sync() {
   $("result").classList.toggle("hidden", !showResult);
   $("result-title").textContent = s.message;
   $("result-detail").textContent = s.detail;
+  const guidance = playGuidance(s, { online: online(), aiming: !!aim });
+  $("context-title").textContent = guidance.title;
+  $("context-controls").textContent = guidance.controls;
+  $("result-next").textContent = guidance.next;
+  $("offense-controls").classList.toggle("hidden", !canPass);
+  $("offense-extra-controls").classList.toggle("hidden", !canPass);
+  $("pointer-control").classList.toggle("hidden", !defending && !canPass);
+  $("pass-style-panel").classList.toggle("hidden", !canPass);
+  $("pass-bullet").disabled = $("pass-lob").disabled = !canPass;
 }
 function worldX(x) {
   return physicalX(state(), x);

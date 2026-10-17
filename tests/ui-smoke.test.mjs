@@ -138,8 +138,23 @@ test("game shell switches from offense to defense and renders valid coordinates"
     });
     handlers.keyup({ key: k });
   };
-  byId("start").onclick();
+  assert.equal(byId("game-body").classList.contains("home-view"), true);
+  byId("home-solo").onclick();
+  assert.equal(byId("game-body").classList.contains("game-view"), true);
+  await byId("back-home").onclick();
+  assert.equal(byId("game-body").classList.contains("home-view"), true);
+  assert.equal(byId("home-resume").classList.contains("hidden"), false);
+  key("Enter");
+  assert.equal(
+    byId("phase-label").textContent,
+    "PRE-SNAP",
+    "home keyboard input must not snap a paused game",
+  );
+  byId("home-resume").onclick();
+  assert.equal(byId("game-body").classList.contains("game-view"), true);
+  assert.equal(byId("pause-overlay").classList.contains("hidden"), true);
   assert.equal(byId("mode-phase").textContent, "YOU: OFFENSE");
+  assert.match(byId("context-controls").textContent, /Enter \/ Snap/);
   const field = byId("field"),
     pointer = (type, x, y, id = 7) =>
       field["event_" + type]({
@@ -155,6 +170,7 @@ test("game shell switches from offense to defense and renders valid coordinates"
   byId("pass-bullet").onclick();
   assert.match(byId("pass-mode-chip").textContent, /BULLET/);
   byId("snap").onclick();
+  assert.match(byId("context-title").textContent, /QB/);
   pointer("pointerdown", 500, 308);
   pointer("pointermove", 700, 335);
   assert.equal(
@@ -166,6 +182,8 @@ test("game shell switches from offense to defense and renders valid coordinates"
   assert.equal(saveDepth, 0);
   pointer("pointerup", 700, 335);
   assert.equal(byId("passing").textContent, "0 / 1");
+  assert.match(byId("context-title").textContent, /Pass in flight/);
+  assert.equal(byId("offense-controls").classList.contains("hidden"), true);
   pointer("pointerup", 700, 335);
   assert.equal(
     byId("passing").textContent,
@@ -220,10 +238,13 @@ test("game shell switches from offense to defense and renders valid coordinates"
   for (let i = 0; i < 4; i++) {
     byId("snap").onclick();
     key("x");
+    assert.match(byId("result-next").textContent, /Enter/);
     byId("snap").onclick();
   }
   assert.equal(byId("mode-phase").textContent, "YOU: DEFENSE");
   assert.equal(byId("touch-juke").textContent, "TACKLE");
+  assert.match(byId("context-title").textContent, /Cyan ring/);
+  assert.match(byId("context-controls").textContent, /Choose coverage/);
   assert.equal(byId("plays").classList.contains("hidden"), true);
   assert.equal(byId("defensive-plays").classList.contains("hidden"), false);
   byId("defensive-plays").children[0].onclick();

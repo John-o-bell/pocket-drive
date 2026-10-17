@@ -11,13 +11,15 @@
     <title>Pocket Drive — Arcade Football</title>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
-  <body id="game-body">
+  <body id="game-body" class="home-view">
     <header>
       <a class="brand" href="./" aria-label="Pocket Drive home"
         ><span class="brand-icon">↗</span> POCKET<span>DRIVE</span
         ><small>ARCADE FOOTBALL</small></a
       >
       <div class="header-right">
+        <button id="back-home" class="online-button">← HOME</button>
+        <button id="fullscreen" class="online-button">FULLSCREEN</button>
         <span class="mode"
           ><i></i> <span id="mode-phase">YOU: OFFENSE</span></span
         ><button id="online-button" class="online-button">ONLINE 1V1</button
@@ -33,7 +35,38 @@
         </button>
       </div>
     </header>
-    <main>
+    <section id="home-page" class="home-page" aria-label="Pocket Drive home">
+      <div class="home-copy">
+        <div class="eyebrow">YOUR FIELD. YOUR CALL.</div>
+        <h1>One more<br /><em>drive.</em></h1>
+        <p>
+          Call the play. Find the seam. Take it home.<br />Retro football. Both
+          sides of the ball.
+        </p>
+        <div class="home-actions">
+          <button id="home-solo" class="primary">
+            PLAY SOLO <span>↗</span>
+          </button>
+          <button id="home-online" class="secondary">
+            ONLINE 1V1 <span>→</span>
+          </button>
+          <button id="home-resume" class="secondary hidden">
+            RESUME GAME →
+          </button>
+        </div>
+        <small>11 ON 11 · FIRST TO 21 · NO SIGN-UP</small>
+      </div>
+      <div class="home-field" aria-hidden="true">
+        <span class="home-endzone">POCKET DRIVE</span>
+        <div class="home-yardlines">
+          <span>10</span><span>20</span><span>30</span><span>40</span
+          ><span>50</span>
+        </div>
+        <span class="home-football">◆</span>
+        <span class="home-field-caption">FRIDAY NIGHT. EVERY NIGHT.</span>
+      </div>
+    </section>
+    <main id="game-page" aria-label="Game">
       <div class="intro">
         <div>
           <div class="eyebrow">ONE MORE DRIVE.</div>
@@ -126,6 +159,7 @@
               <div id="result" class="result hidden">
                 <span id="result-title"></span
                 ><small id="result-detail"></small>
+                <small id="result-next" class="result-next"></small>
               </div>
               <button id="pause" class="pause hidden" aria-label="Pause game">
                 Ⅱ
@@ -237,6 +271,10 @@
               </select>
             </div>
           </aside>
+        </div>
+        <div class="context-guide" aria-label="Current play guidance">
+          <strong id="context-title">Your ball · Choose a play</strong>
+          <span id="context-controls">Select a play card · Enter / Snap</span>
         </div>
         <div class="controls-bar">
           <span class="controls-title">YOUR PLAY SHEET</span

@@ -1809,3 +1809,237 @@ dialog p {
 .team strong #away-team-name {
   display: inline;
 }
+
+/* Keep the current action close to the field without covering live play. */
+.context-guide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 14px 18px;
+  background: #162c32;
+  border-top: 2px solid #6fd6b5;
+  color: #e8e7d3;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.context-guide strong {
+  color: #9ff2e5;
+}
+.context-guide span {
+  flex: 1 1 320px;
+}
+.result .result-next {
+  margin-top: 8px;
+  color: #9ff2e5;
+  font-weight: 700;
+}
+@media (max-width: 600px) {
+  .context-guide {
+    padding: 12px;
+    font-size: 12px;
+    gap: 3px;
+  }
+  .context-guide strong {
+    flex-basis: 100%;
+  }
+}
+
+/* Home and dedicated match views. */
+.home-view #game-page,
+.home-view #back-home,
+.home-view #fullscreen,
+.home-view .header-right .mode,
+.home-view #online-button,
+.game-view #home-page {
+  display: none;
+}
+.home-page {
+  min-height: calc(100dvh - 88px);
+  max-width: 1440px;
+  margin: auto;
+  padding: 70px 6%;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  align-items: center;
+  gap: 70px;
+}
+.home-copy h1 {
+  font-family: "Barlow Condensed", Impact, sans-serif;
+  font-size: clamp(80px, 10vw, 156px);
+  line-height: 0.85;
+  letter-spacing: -3px;
+  margin: 28px 0;
+  text-transform: uppercase;
+}
+.home-copy h1 em {
+  color: var(--orange);
+  font-style: normal;
+}
+.home-copy p {
+  color: #b3c0c3;
+  font-size: 17px;
+  line-height: 1.8;
+}
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 32px 0 24px;
+}
+.home-actions button {
+  min-width: 180px;
+  margin: 0;
+}
+.home-copy > small {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+.home-field {
+  position: relative;
+  height: 490px;
+  overflow: hidden;
+  border: 1px solid #6fd6b566;
+  border-radius: 140px 12px 12px 12px;
+  background: repeating-linear-gradient(
+    0deg,
+    #244d3e 0px,
+    #244d3e 78px,
+    #dbe7d866 79px,
+    #244d3e 80px
+  );
+  box-shadow: 20px 20px 0 #172730;
+  transform: rotate(-4deg);
+}
+.home-endzone {
+  display: block;
+  text-align: center;
+  padding: 28px;
+  background: #142d2b;
+  color: #9ff2e5;
+  letter-spacing: 5px;
+  font-weight: 700;
+}
+.home-yardlines {
+  display: flex;
+  flex-direction: column;
+  gap: 49px;
+  padding: 20px;
+  font:
+    700 26px "Barlow Condensed",
+    sans-serif;
+  color: #e8e7d366;
+}
+.home-football {
+  position: absolute;
+  top: 42%;
+  left: 45%;
+  color: var(--orange);
+  font-size: 90px;
+  transform: rotate(-25deg);
+  text-shadow: 10px 14px #10251b88;
+}
+.home-field-caption {
+  position: absolute;
+  right: 20px;
+  bottom: 25px;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+.game-view header {
+  height: 58px;
+  padding: 0 20px;
+}
+.game-view .brand {
+  font-size: 22px;
+}
+.game-view .brand small,
+.game-view .intro,
+.game-view .bottom-grid,
+.game-view footer,
+.game-view .controls-bar {
+  display: none;
+}
+.game-view .header-right {
+  gap: 16px;
+}
+.game-view #game-page {
+  max-width: none;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+.game-view .arena {
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+}
+.game-view .scoreboard {
+  min-height: 86px;
+  padding: 12px 24px;
+}
+.game-view .game-layout {
+  grid-template-columns: minmax(0, 1fr) 275px;
+}
+.game-view .canvas-wrap {
+  aspect-ratio: auto;
+  height: max(320px, calc(100dvh - 292px));
+}
+.game-view .playbook {
+  max-height: calc(100dvh - 144px);
+  overflow-y: auto;
+}
+.game-view .context-guide {
+  min-height: 66px;
+}
+.game-view .online-bar {
+  margin: 0;
+}
+@media (max-width: 800px) {
+  .home-page {
+    grid-template-columns: 1fr;
+    padding: 48px 7%;
+    gap: 40px;
+  }
+  .home-field {
+    height: 250px;
+    border-radius: 60px 12px 12px 12px;
+  }
+  .home-copy h1 {
+    font-size: 90px;
+  }
+  .home-view header {
+    padding: 0 6%;
+  }
+  .home-view .brand small {
+    display: none;
+  }
+  .game-view .game-layout {
+    grid-template-columns: 1fr;
+  }
+  .game-view .canvas-wrap {
+    height: auto;
+    aspect-ratio: 1.6;
+  }
+  .game-view .playbook {
+    max-height: none;
+  }
+  .game-view header {
+    height: auto;
+    min-height: 58px;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px;
+  }
+  .game-view .header-right {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .game-view .header-right .mode,
+  .game-view .brand small {
+    display: none;
+  }
+  .game-view .scoreboard {
+    padding: 10px;
+  }
+}
