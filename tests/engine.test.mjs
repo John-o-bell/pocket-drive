@@ -575,3 +575,52 @@ test("CPU runs no longer have a five-yard floor against the base defense", () =>
     );
   }
 });
+
+test("line matchups move both players forward or backward according to rush strength", () => {
+  for (const strength of [0.82, 1.18]) {
+    const s = createGame(42);
+    command(s, { type: "snap" });
+    const blocker = s.players.find((p) => p.id === "b0");
+    const rusher = s.players.find((p) => p.id === "e0");
+    blocker.x = 24;
+    blocker.y = rusher.y = 21;
+    rusher.x = 25.25;
+    rusher.strength = strength;
+    for (let i = 0; i < 12; i++) step(s);
+    assert.ok(s.blocks.some(([b, d]) => b === "b0" && d === "e0"));
+    if (strength > 1) {
+      assert.ok(blocker.x < 23.9, "strong rush drives the blocker backward");
+      assert.ok(rusher.x < 25.15, "rusher advances with the collapsing pocket");
+    } else {
+      assert.ok(blocker.x > 24.1, "offensive win gains ground");
+      assert.ok(rusher.x > 25.35, "weaker rusher is pushed back");
+    }
+    assert.ok(
+      Math.hypot(blocker.x - rusher.x, blocker.y - rusher.y) >= 1.24,
+      "engaged players do not overlap",
+    );
+  }
+});
+
+test("engaged defensive linemen shed and penetrate the pocket across seeded matchups", () => {
+  for (let seed = 1; seed <= 12; seed++) {
+    const s = createGame(seed);
+    command(s, { type: "snap" });
+    const engaged = new Set();
+    let penetrated = false;
+    for (let i = 0; i < 600 && s.phase === "live"; i++) {
+      step(s);
+      for (const [bid, did] of s.blocks)
+        if (bid.startsWith("b") && did.startsWith("e")) engaged.add(did);
+      penetrated ||= s.players.some(
+        (p) => engaged.has(p.id) && !p.blocked && p.x < s.spot - 1,
+      );
+    }
+    assert.ok(
+      penetrated,
+      `seed ${seed}: a previously blocked lineman breaks through`,
+    );
+    assert.equal(s.stats.sacks, 1, `seed ${seed}: idle QB can be sacked`);
+    assert.ok(s.elapsed > 2, "pass protection provides time to make a play");
+  }
+});

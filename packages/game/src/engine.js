@@ -862,16 +862,26 @@ function blocking(s, dt, running, carrier, tune) {
           ? s.spot - 0.5
           : target.x - 0.95,
       ty = screenRelease ? 39 : pulling ? 18 : target.y;
-    move(
-      b,
-      tx,
-      ty,
-      b.role === "OL" ? (running ? 5.5 : 4.4) : b.speed * 0.8,
-      dt,
-    );
     const hold =
-      ((running ? (b.role === "OL" ? 1.05 : 0.55) : 2.55) + tune.hold) /
+      ((running ? (b.role === "OL" ? 0.65 : 0.55) : 2.55) + tune.hold) /
       (target.strength || 1);
+    // Once linemen engage, resolve the contest together instead of letting
+    // the blocker chase forward and displace the defender every frame.
+    const lineContact =
+      b.role === "OL" &&
+      dist(b, target) < 2.1 &&
+      target.blockTime < hold &&
+      s.elapsed > target.shedUntil &&
+      !pulling &&
+      !screenRelease;
+    if (!lineContact)
+      move(
+        b,
+        tx,
+        ty,
+        b.role === "OL" ? (running ? 5.5 : 4.4) : b.speed * 0.8,
+        dt,
+      );
     if (
       dist(b, target) < 2.1 &&
       target.blockTime < hold &&
@@ -880,10 +890,24 @@ function blocking(s, dt, running, carrier, tune) {
       target.blocked = true;
       target.blockTime += dt;
       s.blocks.push([b.id, target.id]);
-      // Engaged defenders are held in front of the blocker; runs can push the line.
-      target.vx *= 0.45;
-      target.vy *= 0.45;
-      if (running && target.x < b.x + 1.25) target.x = b.x + 1.25;
+      if (b.role === "OL") {
+        // Seeded strength varies by matchup: some blocks gain ground while
+        // stronger rushers drive the pocket backward. No per-frame randomness.
+        const drive = clamp(
+          (1 - (target.strength || 1)) * 5 + (running ? 0.2 : -0.15),
+          -1.2,
+          1.2,
+        );
+        b.vx = target.vx = drive;
+        b.vy *= 0.45;
+        target.vy *= 0.45;
+        b.x = clamp(b.x + drive * dt, -9, 109);
+        target.x = clamp(target.x + drive * dt, -9, 109);
+      } else {
+        target.vx *= 0.45;
+        target.vy *= 0.45;
+        if (running && target.x < b.x + 1.25) target.x = b.x + 1.25;
+      }
       if (target.blockTime >= hold) {
         target.shedUntil = s.elapsed + 1.6;
         target.stun = 0.05;
@@ -1214,8 +1238,18 @@ export function step(s, input = {}, dt = DT) {
       const dx = d.x - b.x,
         dy = d.y - b.y,
         len = Math.hypot(dx, dy) || 1;
-      d.x = b.x + (dx / len) * 1.25;
-      d.y = b.y + (dy / len) * 1.25;
+      if (b.role === "OL") {
+        const nx = dx === 0 && dy === 0 ? 1 : dx / len,
+          ny = dy / len,
+          correction = (1.25 - Math.hypot(dx, dy)) / 2;
+        b.x -= nx * correction;
+        b.y -= ny * correction;
+        d.x += nx * correction;
+        d.y += ny * correction;
+      } else {
+        d.x = b.x + (dx / len) * 1.25;
+        d.y = b.y + (dy / len) * 1.25;
+      }
     }
   }
   s.pressure = clamp(
