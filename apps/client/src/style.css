@@ -2043,3 +2043,30 @@ dialog p {
     padding: 10px;
   }
 }
+
+.passing-feedback {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #6fd6b54d;
+  border-radius: 6px;
+  background: #10272b;
+  line-height: 1.5;
+}
+.passing-feedback strong {
+  color: #edf3da;
+  font-size: 12px;
+}
+.passing-feedback small {
+  color: #b3c0c3;
+  font-size: 11px;
+}
+.coverage-key {
+  color: #ffdb9b;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+}
+.coverage-key b {
+  color: #91f0bd;
+}

@@ -20,6 +20,7 @@ import {
 } from "./camera.js";
 import { RoomSession, savedRoom } from "./network.js";
 import { playGuidance } from "./guidance.js";
+import { receiverRead, pointerPassTarget } from "./passing-feedback.js";
 const $ = (id) => document.getElementById(id),
   canvas = $("field"),
   ctx = canvas.getContext("2d");
@@ -588,14 +589,19 @@ function aimTarget() {
   return screenToField(s, view, aim.current.x, aim.current.y);
 }
 function previewPlan() {
-  const s = state();
-  return s.possession === 0 &&
-    s.phase === "live" &&
-    s.carrier === "qb" &&
-    !s.passThrown &&
-    aimTarget()
-    ? passPlan(s, aimTarget(), passStyle)
-    : null;
+  const s = state(),
+    target = pointerPassTarget(s, aimTarget(), aim);
+  if (
+    s.possession !== 0 ||
+    s.phase !== "live" ||
+    s.carrier !== "qb" ||
+    s.passThrown ||
+    !target ||
+    paused
+  )
+    return null;
+  const plan = passPlan(s, target, passStyle);
+  return plan ? { ...plan, receiver: target.receiver } : null;
 }
 canvas.addEventListener("pointermove", (e) => {
   mouse = coords(e);
@@ -640,12 +646,7 @@ canvas.addEventListener("pointerup", (e) => {
   e.preventDefault();
   aim.current = canvasPoint(e);
   const gesture = aim,
-    target = aimTarget(),
-    moved =
-      Math.hypot(
-        gesture.current.x - gesture.start.x,
-        gesture.current.y - gesture.start.y,
-      ) > 6;
+    target = aimTarget();
   const s = state();
   aim = null;
   if (
@@ -656,18 +657,8 @@ canvas.addEventListener("pointerup", (e) => {
     s.passThrown
   )
     return;
-  if (!moved) {
-    if (gesture.mode === "pull") return;
-    const p = coords(e),
-      receiver = s.players.find(
-        (r) => r.eligible && Math.hypot(r.x - p.x, r.y - p.y) < 3,
-      );
-    send(
-      receiver
-        ? { type: "throw", receiver: receiver.number - 1 }
-        : { type: "throw", ...p },
-    );
-  } else send({ type: "throw", ...target });
+  const passTarget = pointerPassTarget(s, target, gesture);
+  if (passTarget) send({ type: "throw", ...passTarget });
 });
 canvas.addEventListener("pointercancel", (e) => {
   if (aim?.pointerId === e.pointerId) aim = null;
@@ -996,6 +987,28 @@ function sync() {
   $("pointer-control").classList.toggle("hidden", !defending && !canPass);
   $("pass-style-panel").classList.toggle("hidden", !canPass);
   $("pass-bullet").disabled = $("pass-lob").disabled = !canPass;
+  $("passing-feedback").classList.toggle("hidden", !canPass);
+  const plan = previewPlan();
+  $("pass-target-readout").textContent = plan
+    ? plan.receiver !== undefined
+      ? `TARGET ${plan.receiver + 1} · ${
+          receiverRead(
+            s,
+            s.players.find((p) => p.number === plan.receiver + 1),
+          ).label
+        } · ${Math.round(plan.distance)} YD`
+      : `LANDING SPOT · ${Math.round(plan.distance)} YD`
+    : aim
+      ? "AIM FORWARD TO THROW"
+      : "Aim at a receiver or choose 1–5";
+  $("pass-accuracy").textContent =
+    s.phase === "ready"
+      ? "Coverage shows current space, not a guaranteed catch."
+      : s.pressure > 0.6
+        ? "UNDER PRESSURE · Throws are less accurate"
+        : Math.hypot(s.players[0].vx, s.players[0].vy) > 3
+          ? "ON THE MOVE · Plant your feet for accuracy"
+          : "FEET SET · Best passing accuracy";
 }
 function worldX(x) {
   return physicalX(state(), x);
@@ -1223,17 +1236,12 @@ function player(s, p) {
     !s.passThrown &&
     PLAYS[s.play].type === "PASS"
   ) {
-    rect(x - 7, y - 31, 14, 12, "#152c2dde");
-    const separation = Math.min(
-      ...s.players
-        .filter((d) => d.team === 1)
-        .map((d) => Math.hypot(d.x - p.x, d.y - p.y)),
-    );
-    ctx.fillStyle =
-      separation > 4 ? "#91f0bd" : separation > 2 ? "#ffdb9b" : "#ff956d";
-    ctx.font = "bold 10px monospace";
+    const read = receiverRead(s, p);
+    rect(x - 35, y - 33, 70, 14, "#152c2df0");
+    ctx.fillStyle = read.color;
+    ctx.font = "bold 9px monospace";
     ctx.textAlign = "center";
-    ctx.fillText(p.number, x, y - 22);
+    ctx.fillText(`${p.number} ${read.label}`, x, y - 23);
   }
   if (p.role === "RB" && s.phase === "ready") {
     rect(x - 11, y + 20, 23, 12, "#15302ce0");
@@ -1342,6 +1350,32 @@ function render(t, dt = 1 / 60) {
       plan = previewPlan();
     if (plan) {
       const color = plan.style === "lob" ? "#91e7d3" : "#ffca83";
+      if (plan.receiver !== undefined) {
+        const receiver = s.players.find(
+          (p) => p.eligible && p.number === plan.receiver + 1,
+        );
+        ctx.strokeStyle = receiverRead(s, receiver).color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.ellipse(
+          px(receiver.x),
+          py(receiver.y) + 5,
+          23 * view.zoom,
+          14 * view.zoom,
+          0,
+          0,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+        ctx.font = "bold 11px monospace";
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.fillText(
+          "TARGET " + receiver.number,
+          px(receiver.x),
+          py(receiver.y) - 44,
+        );
+      }
       ctx.strokeStyle = color + "70";
       ctx.lineWidth = 1.5;
       ctx.setLineDash([4, 7]);

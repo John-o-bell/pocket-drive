@@ -171,6 +171,8 @@ test("game shell switches from offense to defense and renders valid coordinates"
   assert.match(byId("pass-mode-chip").textContent, /BULLET/);
   byId("snap").onclick();
   assert.match(byId("context-title").textContent, /QB/);
+  assert.equal(byId("passing-feedback").classList.contains("hidden"), false);
+  assert.match(byId("pass-accuracy").textContent, /FEET SET/);
   pointer("pointerdown", 500, 308);
   pointer("pointermove", 700, 335);
   assert.equal(
@@ -183,6 +185,7 @@ test("game shell switches from offense to defense and renders valid coordinates"
   pointer("pointerup", 700, 335);
   assert.equal(byId("passing").textContent, "0 / 1");
   assert.match(byId("context-title").textContent, /Pass in flight/);
+  assert.equal(byId("passing-feedback").classList.contains("hidden"), true);
   assert.equal(byId("offense-controls").classList.contains("hidden"), true);
   pointer("pointerup", 700, 335);
   assert.equal(
